@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
+#include <omp.h>
 
 using namespace std;
 using namespace std::chrono;
@@ -36,19 +37,40 @@ public:
     return true;
   }
 
-  void multiplyMatrices() {
+  void multiplySequential() {
     resultMatrix.resize(size, vector<double>(size, 0.0));
-    for (int i = 0; i < size; i++)
-      for (int j = 0; j < size; j++)
-        for (int k = 0; k < size; k++)
+    for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++) {
+        for (int k = 0; k < size; k++) {
           resultMatrix[i][j] += matrixA[i][k] * matrixB[k][j];
+        }
+      }
+    }
   }
 
-  bool writeResult(const string& filename, double execTime) {
+  // Параллельное умножение с OpenMP
+  void multiplyParallel(int numThreads = 4) {
+    resultMatrix.resize(size, vector<double>(size, 0.0));
+    omp_set_num_threads(numThreads);
+    
+    #pragma omp parallel for collapse(2)
+    for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++) {
+        double sum = 0.0;
+        for (int k = 0; k < size; k++) {
+          sum += matrixA[i][k] * matrixB[k][j];
+        }
+        resultMatrix[i][j] = sum;
+      }
+    }
+  }
+
+  bool writeResult(const string& filename, double execTime, int threads = 0) {
     ofstream file(filename);
     if (!file.is_open()) return false;
     
     file << "# Size: " << size << "x" << size << "\n";
+    file << "# Threads: " << threads << "\n";
     file << "# Time: " << execTime << " s\n";
     file << "# Operations: " << (long long)size * size * (2 * size - 1) << "\n";
     file << "# Data: " << (3 * size * size * sizeof(double)) / 1024.0 << " KB\n\n";
@@ -63,6 +85,8 @@ public:
   }
 
   int getSize() const { return size; }
+  
+  const vector<vector<double>>& getResult() const { return resultMatrix; }
 };
 
 void generateMatrices(const string& filename, int size) {
@@ -85,7 +109,8 @@ int main(int argc, char* argv[]) {
   if (argc < 2) {
     cout << "Usage:\n";
     cout << "  " << argv[0] << " generate <file> <size>\n";
-    cout << "  " << argv[0] << " run <input> <output>\n";
+    cout << "  " << argv[0] << " run <input> <output> [threads]\n";
+    cout << "  " << argv[0] << " seq <input> <output>\n";
     return 1;
   }
 
@@ -96,16 +121,29 @@ int main(int argc, char* argv[]) {
     cout << "Generated: " << argv[2] << "\n";
   }
   else if (cmd == "run" && argc >= 4) {
+    int threads = (argc >= 5) ? atoi(argv[4]) : 4;
     MatrixMultiplier m;
     if (!m.readMatrices(argv[2])) return 1;
     
     auto start = high_resolution_clock::now();
-    m.multiplyMatrices();
+    m.multiplyParallel(threads);
     auto end = high_resolution_clock::now();
     double time = duration<double>(end - start).count();
     
-    m.writeResult(argv[3], time);
-    cout << m.getSize() << " " << time << "\n";
+    m.writeResult(argv[3], time, threads);
+    cout << m.getSize() << " " << threads << " " << time << "\n";
+  }
+  else if (cmd == "seq" && argc >= 4) {
+    MatrixMultiplier m;
+    if (!m.readMatrices(argv[2])) return 1;
+    
+    auto start = high_resolution_clock::now();
+    m.multiplySequential();
+    auto end = high_resolution_clock::now();
+    double time = duration<double>(end - start).count();
+    
+    m.writeResult(argv[3], time, 1);
+    cout << m.getSize() << " 1 " << time << "\n";
   }
   else {
     cout << "Unknown command\n";
