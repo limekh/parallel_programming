@@ -34,8 +34,8 @@ compile.bat
 test.bat
 ```
 Пример работы теста для матрицы размером 400x400:
-<img width="377" height="335" alt="image" src="https://github.com/user-attachments/assets/fe4458c2-7a09-4b4d-bf00-c90510f0ad87" />
 
+<img width="377" height="335" alt="image" src="https://github.com/user-attachments/assets/fe4458c2-7a09-4b4d-bf00-c90510f0ad87" />
 
 ### Процесс проверки
 1. C++ программа умножает матрицы и сохраняет результат в output.txt
