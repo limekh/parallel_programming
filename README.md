@@ -50,6 +50,7 @@ test.bat
 |512           |0.109029              |268173312          |6144         |
 #### График зависимости времени выполнения от размера матрицы:  
 <img width="952" height="533" alt="image" src="https://github.com/user-attachments/assets/bcb2baa0-2621-4a2e-8805-8de91464cbdc" />
+
 #### График зависимости времени выполнения от размера матрицы:  
 <img width="952" height="533" alt="image" src="https://github.com/user-attachments/assets/88e824a2-f868-41af-a670-41c2efbaeeed" />
 
