@@ -20,14 +20,20 @@ for SIZE in 200 400 800 1200; do
     echo "  Generated: input/matrix.txt"
     
     # Тесты с разным количеством процессов
-    for PROCS in 1 2 4; do
-        # Запускаем MPI, сохраняем вывод во временный файл
-        mpirun --allow-run-as-root -n $PROCS ./matrix_mpi run input/matrix.txt output/result.txt > temp_output.txt 2>&1
+    for PROCS in 1 2 4 6; do
+        # Запускаем MPI, сохраняем только stdout (stderr игнорируем)
+        mpirun --allow-run-as-root -n $PROCS ./matrix_mpi run input/matrix.txt output/result.txt 2>/dev/null | tail -1 > temp_output.txt
         
-        # Читаем время из последней строки (формат: size processes time)
-        TIME=$(tail -1 temp_output.txt | awk '{print $3}')
+        # Читаем время (последняя строка, третье поле)
+        TIME=$(cat temp_output.txt | awk '{print $3}')
         
-        # Если время пустое, ставим 0
+        # Если время пустое или 0, пробуем альтернативный парсинг
+        if [ -z "$TIME" ] || [ "$TIME" = "0" ]; then
+            # Пробуем найти строку с размером матрицы
+            TIME=$(grep -E "^[0-9]+ [0-9]+ [0-9]" temp_output.txt | awk '{print $3}')
+        fi
+        
+        # Если всё ещё пусто, ставим 0
         if [ -z "$TIME" ]; then
             TIME="0"
         fi
@@ -43,7 +49,7 @@ for SIZE in 200 400 800 1200; do
         
         # Верификация (только для 1 процесса)
         if [ $PROCS -eq 1 ]; then
-            python3 verify.py matrix.txt output/result.txt 2>/dev/null
+            python3 verify.py input/matrix.txt output/result.txt 2>/dev/null
         fi
     done
     

@@ -199,10 +199,13 @@ int main(int argc, char* argv[]) {
         
         double execTime = endTime - startTime;
         
+        MPI_Barrier(MPI_COMM_WORLD);
+        
         // Запись результата (только процесс 0)
         if (procRank == 0) {
             writeResult(outputFile, result, size, execTime);
             cout << size << " " << procNum << " " << fixed << execTime << endl;
+            cout.flush();
         }
     }
     
