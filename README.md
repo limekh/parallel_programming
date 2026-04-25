@@ -34,13 +34,13 @@ python plot_results.py
 ```
 
 Пример работы теста для матрицы размером 800x800:
-
-Matrix size: 800x800
-Block config: (16, 16)
-Memory type: global
-Kernel execution time: 12.605 ms
-Operations: 1023360000
-
+```
+Matrix size: 800x800  
+Block config: (16, 16)  
+Memory type: global  
+Kernel execution time: 12.605 ms  
+Operations: 1023360000  
+```
 
 где:  
 *Block config* - размер блока потоков (blockDim.x × blockDim.y),  
